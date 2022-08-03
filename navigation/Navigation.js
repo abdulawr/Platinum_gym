@@ -1,7 +1,9 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from '../screen/HomeScreen/HomeScreen';
 import Landing from '../screen/Landing';
 import Startup from "../screen/Startup";
+
 
 const Navigation = () => {
 
@@ -9,9 +11,10 @@ const Navigation = () => {
 
     return ( 
         <NavigationContainer>
-           <Stack.Navigator initialRouteName="Startup">
-             <Stack.Screen name="Startup" component={Startup} options={{headerShown:false}} />
-             <Stack.Screen name="Landing" component={Landing} options={{headerShown:false}} />
+           <Stack.Navigator initialRouteName="Startup" screenOptions={{headerShown:false}}>
+             <Stack.Screen name="Startup" component={Startup}/>
+             <Stack.Screen name="Landing" component={Landing}/>
+             <Stack.Screen name="HomeScreen" component={HomeScreen} />
            </Stack.Navigator>
         </NavigationContainer>
      );
