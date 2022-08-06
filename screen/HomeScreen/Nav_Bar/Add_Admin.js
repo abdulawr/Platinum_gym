@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
     View,
-    Text,
     StyleSheet,
-
+    Image,
     Pressable,
     ToastAndroid,
     ScrollView
@@ -18,7 +17,9 @@ import { fireStore } from '../../../config/firebase';
 import { doc, setDoc } from "firebase/firestore"; 
 import { useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import Image  from 'react-native-compressor';
+import { manipulateAsync, FlipType, SaveFormat } from 'expo-image-manipulator';
+import { getStorage, ref,uploadBytes,getDownloadURL,uploadBytesResumable  } from "firebase/storage";
+
 
 
 const Add_Admin = (props) => {
@@ -31,58 +32,101 @@ const Add_Admin = (props) => {
     const [password,setPassword] = useState();
 
     const [loading,setLoading] = useState(false);
-    const [chooseimage,setChooseImage] = useState(false);
-    const [image,setImage] = useState(require("../../../assets/images/choose_image.jpg"));
+    const [chooseimage11,setChooseImage] = useState(null);
+    const [image,setImage] = useState(require("../../../assets/images/choose_image.png"));
 
-    const submitForm = (props) => {
+    const submitForm = async (props) => {
       
         if(Helper.validInput(name) && Helper.validInput(mobile) && Helper.validInput(email) && Helper.validInput(password)){
             
           if(Helper.validateEmail(email)){
-            setLoading(true);
+         
+            if(chooseimage11 != null){
 
-            // ###############################################
-            const auth = getAuth();
-            createUserWithEmailAndPassword(auth, email, password)
-              .then((userCredential) => {
-                  // Store use information in the firebase realtime database START****
-     
-                   try {
-                    setDoc(doc(fireStore, "admins", userCredential.user.uid),{
-                       name: name,
-                       email: email,
-                       mobile: mobile,
-                       image:'null',
-                       type:'2',
-                       balance:'0'
-                     }).then((resp) => {
-                       setLoading(false);
-                       ToastAndroid.show('Account created successufully',ToastAndroid.SHORT);
-                       setTimeout(() => {
-                         navigation.navigate("AdminList");
-                       }, 100);
-                     
-                     }).catch((exp)=>{
-                       setLoading(false);
-                       ToastAndroid.show('Error occured while adding user data!',ToastAndroid.SHORT);
-                     });
-                    
-                 } catch (e) {
-                    console.log("Error --> ",e);
-                   setLoading(false);
-                   ToastAndroid.show('Something went wrong try again',ToastAndroid.SHORT);
-                 }
-     
-                   // Store use information in the firebase realtime database END****  
-              })
-              .catch((error) => {
-                console.log(error)
-                setLoading(false);
-                ToastAndroid.show('Account exist with this email!',ToastAndroid.SHORT);
-              });
-            // ###############################################
+              setLoading(true);
+              const storage = getStorage();
+              const storageRef = ref(storage,'admins/'+mobile+"/"+Math.random().toString(30)); 
+              let response = await fetch(chooseimage11.uri);
+              let blog = await response.blob();
+              const result1111 = uploadBytesResumable(storageRef, blog);
+             
+              result1111.on('state_changed',
+                (snapshot) => {
+                  // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                  const progress = (snapshot.bytesTransferred / snapshot.totalBytes);
+                  console.log(progress)
+                }, 
+                (error) => {
+                  switch (error.code) {
+                    case 'storage/unauthorized':
+                      ToastAndroid.show("Image uploading stop due to unauthorized access.",ToastAndroid.SHORT);
+                      setLoading(false);
+                      break;
+                    case 'storage/canceled':
+                      ToastAndroid.show("Image uploading canceled.",ToastAndroid.SHORT);
+                      setLoading(false);
+                      break;
+                    case 'storage/unknown':
+                      ToastAndroid.show("Something went wrong try again.",ToastAndroid.SHORT);
+                      setLoading(false);
+                      break;
+                  }
+                }, 
+                (sn) => {
+                  // Upload completed successfully, now we can get the download URL
+                  getDownloadURL(result1111.snapshot.ref).then((downloadURL) => {
+                      
+                      // ###############################################
+                          const auth = getAuth();
+                          createUserWithEmailAndPassword(auth, email, password)
+                            .then((userCredential) => {
+                                // Store use information in the firebase realtime database START****
+                  
+                                try {
+                                  setDoc(doc(fireStore, "admins", userCredential.user.uid),{
+                                    name: name,
+                                    email: email,
+                                    mobile: mobile,
+                                    image:downloadURL,
+                                    type:'2',
+                                    balance:'0'
+                                  }).then((resp) => {
+                                    setLoading(false);
+                                    ToastAndroid.show('Account created successufully',ToastAndroid.SHORT);
+                                    setTimeout(() => {
+                                      navigation.navigate("AdminList");
+                                    }, 100);
+                                  
+                                  }).catch((exp)=>{
+                                    setLoading(false);
+                                    ToastAndroid.show('Error occured while adding user data!',ToastAndroid.SHORT);
+                                  });
+                                  
+                              } catch (e) {
+                                  console.log("Error --> ",e);
+                                setLoading(false);
+                                ToastAndroid.show('Something went wrong try again',ToastAndroid.SHORT);
+                              }
+                  
+                                // Store use information in the firebase realtime database END****  
+                            })
+                            .catch((error) => {
+                              console.log(error)
+                              setLoading(false);
+                              ToastAndroid.show('Account exist with this email!',ToastAndroid.SHORT);
+                            });
+                      // ###############################################
 
-          }
+                  });
+                }
+              );
+            }
+            else{
+              setLoading(false);
+              ToastAndroid.show('Please select image',ToastAndroid.SHORT);
+            }
+
+      }
           else{
             ToastAndroid.show("Please enter valid email address.",ToastAndroid.SHORT);
           }
@@ -94,20 +138,6 @@ const Add_Admin = (props) => {
     }
 
     useEffect(() => {
-   
-        (
-            async () => {
-                Image.compress('file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540tcomprog%252FPlatinum_gym/ImagePicker/62f85c97-210b-4306-91f3-182e1c56384d.jpg', {
-                    compressionMethod: 'auto',
-                }).then((result) => {
-                    console.log(result);
-                }).catch((err) => {
-                    console.log('Error --> ',err);
-                })
-               
-            }
-        )()
-
         const unsubscribe = navigation.addListener('focus', () => {
           setName('');
           setMobile('');
@@ -126,18 +156,19 @@ const Add_Admin = (props) => {
             quality: 0.7,
           });
 
-          console.log(result);
+        //  console.log('Orginal result => ',result);
 
           if (!result.cancelled) {
 
-            const result11 = await Image.compress(result.uri, {
-                quality: 0.8,
-                compressionMethod: 'auto',
-            });
-            console.log(result11);
-            setChooseImage(result.uri);
+            const manipResult = await manipulateAsync(result.uri,
+              [],
+              { compress: 0.8, format: SaveFormat.JPEG }
+            );
+
+         //   console.log('Resize IMage ===> ',manipResult);
+            setChooseImage(manipResult);
             setImage({uri:result.uri});
-          }
+      }
     }
 
     return ( 
@@ -150,7 +181,7 @@ const Add_Admin = (props) => {
              <Input value={password} secureTextEntry={true} onChangeText={(value) => {setPassword(value)}} placeholder="Password" />
 
              <Pressable onPress={chooseImage} style={styles.imageContainer}>
-               {/* <Image resizeMode="contain" style={styles.image}  source={image}  /> */}
+               <Image resizeMode="contain" style={styles.image}  source={image}  />
              </Pressable>
 
              <Button_c onClick={submitForm} style={{width:'86%',marginVertical:40}} title="Submit" type="y" />

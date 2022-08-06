@@ -65,21 +65,32 @@ const Landing = (props) => {
             const user = userCredential.user;
 
             var exp_date = new Date(new Date().getTime() + parseInt(user.stsTokenManager.expirationTime) * 1000)
-
+            console.log('User ==> ',user.uid)
             const docRef = doc(fireStore, "admins", user.uid);
             getDoc(docRef).then((resp)=>{
 
-             let json = resp.data();
-             json.userID = user.uid;
-             json.tokenID = user.stsTokenManager.accessToken;
-             json.expireDate = exp_date;
-             
-             value.autoLogout(parseInt(user.stsTokenManager.expirationTime) * 1000,navigation);
-             
-              value.login({...value,user:json});
-              json = JSON.stringify(json);
-              AsyncStorage.setItem('user',json);
-              navigation.replace("HomeScreen");
+               console.log(resp);
+               setLoading(false);
+
+               if(resp.exists()){
+                  let json = resp.data();
+                  console.log('JSON = > ',json)
+                  json.userID = user.uid;
+                  json.password = password;
+                  json.tokenID = user.stsTokenManager.accessToken;
+                  json.expireDate = exp_date;
+                  
+                  value.autoLogout(parseInt(user.stsTokenManager.expirationTime) * 1000,navigation);
+                  
+                   value.login({...value,user:json});
+                   json = JSON.stringify(json);
+                   AsyncStorage.setItem('user',json);
+                   navigation.replace("HomeScreen");
+               }
+               else{
+                  setLoading(false);
+                  ToastAndroid.show("Invalid username or password",ToastAndroid.SHORT);
+               }
 
              }).catch((er)=>{
                 setLoading(false);
