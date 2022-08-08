@@ -74,18 +74,23 @@ const Landing = (props) => {
 
                if(resp.exists()){
                   let json = resp.data();
-                  console.log('JSON = > ',json)
-                  json.userID = user.uid;
-                  json.password = password;
-                  json.tokenID = user.stsTokenManager.accessToken;
-                  json.expireDate = exp_date;
-                  
-                  value.autoLogout(parseInt(user.stsTokenManager.expirationTime) * 1000,navigation);
-                  
-                   value.login({...value,user:json});
-                   json = JSON.stringify(json);
-                   AsyncStorage.setItem('user',json);
-                   navigation.replace("HomeScreen");
+                  if(json.status == '1'){
+                     setLoading(false);
+                     ToastAndroid.show("Your account has been deleted by super admin",ToastAndroid.SHORT);
+                  }
+                  else{
+                     json.userID = user.uid;
+                     json.password = password;
+                     json.tokenID = user.stsTokenManager.accessToken;
+                     json.expireDate = exp_date;
+                     
+                     value.autoLogout(parseInt(user.stsTokenManager.expirationTime) * 1000,navigation);
+                     
+                      value.login({...value,user:json});
+                      json = JSON.stringify(json);
+                      AsyncStorage.setItem('user',json);
+                      navigation.replace("HomeScreen");
+                  }
                }
                else{
                   setLoading(false);

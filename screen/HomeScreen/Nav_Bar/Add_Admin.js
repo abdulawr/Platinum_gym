@@ -85,6 +85,7 @@ const Add_Admin = (props) => {
                                 try {
                                   setDoc(doc(fireStore, "admins", userCredential.user.uid),{
                                     name: name,
+                                    status:0,
                                     email: email,
                                     mobile: mobile,
                                     image:downloadURL,

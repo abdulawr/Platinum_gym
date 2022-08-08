@@ -72,7 +72,7 @@ const CustomNavigation = (props) => {
 const styles = StyleSheet.create({
   header:{
      height:300,
-     marginBottom:-190,
+     marginBottom:-180,
      zIndex:-1,
   },
   layer1:{

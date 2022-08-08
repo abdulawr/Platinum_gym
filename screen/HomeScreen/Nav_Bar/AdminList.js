@@ -5,7 +5,7 @@ import {
     StyleSheet
 } from 'react-native';
 import MyContext from '../../../context/MyContext';
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { fireStore } from '../../../config/firebase';
 import { FlashList } from '@shopify/flash-list';
 import AdminRow from '../../Admin/AdminRow';
@@ -18,19 +18,24 @@ const AdminList = ({ navigation }) => {
     const [admins,setAdmin] = useState();
     const [length,setLength] = useState(10);
     const [loading,setLoading] = useState(false);
-   // console.log("Value => ",value)
+    
+    const openProfile = (item) => {
+       navigation.navigate("AdminProfile",{item:item});
+    }
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
             (
                 async () => {
-                    const q = query(collection(fireStore, "admins"), where("type", "==", '2'));
+                    const q = query(collection(fireStore, "admins"),where('status','==','0'));
                     setLoading(true);
                     const querySnapshot = await getDocs(q);
                     let result = [];
                     querySnapshot.forEach((doc) => {
                       // doc.data() is never undefined for query doc snapshots
-                      result.push(doc.data());
+                      const item = doc.data();
+                      item.id = doc.id;
+                      result.push(item);
                     //  console.log(doc.id, " => ", doc.data());
                     });
     
@@ -57,7 +62,7 @@ const AdminList = ({ navigation }) => {
            data={admins}
            estimatedItemSize={length}
            renderItem={({item}) =>{
-             return <AdminRow item={item} />
+             return <AdminRow openProfile={openProfile} item={item} email={value.user.email} />
            }}
            />
         </View>

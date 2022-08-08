@@ -16,6 +16,7 @@ import Add_Admin from './Nav_Bar/Add_Admin';
 import { FontAwesome5 } from '@expo/vector-icons'; 
 import Profile from './Nav_Bar/Profile';
 import AdminList from './Nav_Bar/AdminList';
+import CompanyAccount from './Nav_Bar/CompanyAccount';
 
 
 const HomeScreen = () => {
@@ -73,6 +74,12 @@ const HomeScreen = () => {
                     drawerLabel:'Profile',
                      drawerIcon:({color,size,focused})=> <FontAwesome5 name={(focused == true) ? 'user-circle' : 'user-circle'} size={size} color={color}></FontAwesome5>}
                 } name='Profile' component={Profile}  />
+
+           <Drawer.Screen 
+            options={{
+                    drawerLabel:'Account',
+                     drawerIcon:({color,size,focused})=> <FontAwesome5 name="cc-mastercard" size={size} color={color}></FontAwesome5>}
+                } name='CompanyAccount' component={CompanyAccount}  />
 
             <Drawer.Screen options={{
                     drawerLabel:'About',

@@ -14,7 +14,7 @@ const MemberRow = (props) => {
 
     const {item} = props;
    
-   const date =  new Date(item.join_date.seconds * 1000).toLocaleDateString()
+   const date =  new Date(item.join_date.seconds * 1000).toDateString()
 
     return ( 
         <View style={styles.container}>
