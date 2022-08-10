@@ -3,8 +3,9 @@ import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import Navigation from './navigation/Navigation';
 import MyContext from './context/MyContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {auth} from './config/firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 export default function App() {
