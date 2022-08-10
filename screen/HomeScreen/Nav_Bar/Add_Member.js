@@ -5,7 +5,9 @@ import {
     ScrollView,
     Pressable,
     Image,
-    ToastAndroid
+    ToastAndroid,
+    Modal,
+    Dimensions
 } from 'react-native';
 import Input_b from '../../../component/Input/Input_b';
 import Colors from '../../../constant/Colors';
@@ -18,11 +20,16 @@ import Helper from '../../../Helper/Helper';
 import { fireStore } from '../../../config/firebase';
 import { doc, setDoc,getDoc  } from "firebase/firestore"; 
 import { getStorage, ref,uploadBytes,getDownloadURL,uploadBytesResumable  } from "firebase/storage";
-
+import { Ionicons } from '@expo/vector-icons'; 
+import { Camera, CameraType } from 'expo-camera';
+import {useLayoutEffect,useRef} from 'react';
 
 const Add_Member = (props) => {
     const {navigation} = props;
     const [image,setImage] = useState(require("../../../assets/images/choose_image.png"));
+
+    const [visible, setVisible] = useState(false);
+    let camera = useRef();
 
     const [name,setName] = useState('');
     const [loading,setLoading] = useState(false);
@@ -36,6 +43,10 @@ const Add_Member = (props) => {
     const [height,setHeight] = useState('');
     const [blood_group,setBloodgroup] = useState('');
     const [chooseImage,setChooseImage] = useState(null);
+
+    const [hasPermission, setHasPermission] = useState(null);
+    const [type, setType] = useState(CameraType.back);
+    const [chooseCamera, setchooseCamer] = useState(false);
 
     const addMember = () => {
    
@@ -118,16 +129,16 @@ const Add_Member = (props) => {
         setDoc(doc(fireStore, "members", mobile),{
             join_date:new Date(),
             name:name,
-            occupation:occupation,
+            occupation:occupation || null,
             age:age,
             cnic:cnic,
-            address:address,
+            address:address || null,
             mobile:mobile,
-            secondaryContact:secondary_contact,
-            weight:weight,
-            height:height,
-            bloodGroup:blood_group,
-            image:imagePath
+            secondaryContact:secondary_contact || null,
+            weight:weight || null,
+            height:height || null,
+            bloodGroup:blood_group || null,
+            image:imagePath || null
          }).then((resp) => {
            setLoading(false);
            ToastAndroid.show('Account created successufully',ToastAndroid.SHORT);
@@ -176,6 +187,43 @@ const Add_Member = (props) => {
          //   console.log('Resize IMage ===> ',manipResult);
             setChooseImage(manipResult);
             setImage({uri:result.uri});
+            setchooseCamer(false);
+            setVisible(false);
+      }
+    }
+
+    useLayoutEffect(() => {
+      (async () => {
+        await askPer();
+      })();
+    }, [])
+
+    const askPer = async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === 'granted');
+    }
+
+
+    const onCaptureImage = async () => {
+      setLoading(true);
+      if(camera){
+        camera.takePictureAsync().then(async(res)=>{
+        
+         const manipResult = await manipulateAsync(res.uri,
+            [],
+            { compress: 0.8, format: SaveFormat.JPEG }
+          );
+
+          setChooseImage(manipResult);
+          setImage({uri:res.uri});
+          setchooseCamer(false);
+          setVisible(false);
+          setLoading(false);
+
+        })
+      }
+      else{
+        setLoading(false);
       }
     }
 
@@ -184,6 +232,56 @@ const Add_Member = (props) => {
     return ( 
         <ScrollView  style={{flex:1}} showsVerticalScrollIndicator={false} contentContainerStyle={{flexGrow:1}}>
         <View style={styles.container}>
+
+
+
+        <Modal transparent visible={visible}>
+              <View style={{flex:1,backgroundColor:'#00000099',justifyContent:'center',alignItems:'center'}}>
+                   <View style={{width:250,height:180,backgroundColor:'white',borderRadius:10,elevation:7,justifyContent:'center'}}>
+                      <Ionicons onPress={()=>setVisible(false)} name="close-circle" size={35} color="red" style={{alignSelf:'flex-end'}} />
+                      <Button_c onClick={()=> chooseImageFunc(1)} title="Gallery" type='y'  style={{marginTop:0}}/>
+                      <Button_c onClick={()=> {
+                        if(hasPermission === true ){
+                          setchooseCamer(true);
+                        }
+                        else{
+                          askPer(hasPermission);
+                        }
+                      }} title="Camera" style={{marginTop:15,marginBottom:25}} type='y' />
+                   </View>
+              </View>
+            </Modal>
+
+
+            <Modal transparent visible={chooseCamera}>
+              <View style={{flex:1,backgroundColor:'#00000099',justifyContent:'center',alignItems:'center'}}>
+                   <View style={{width:Dimensions.get('window').width-23,height:Dimensions.get('window').height*0.8,backgroundColor:'white',borderRadius:10,elevation:7}}>
+                      <Ionicons onPress={()=>setchooseCamer(false)} name="close-circle" size={35} color="red" style={{alignSelf:'flex-end'}} />
+                        <Camera
+                          autoFocus={true}
+                          ratio={[1,1]}
+                          ref={(r) => {
+                            camera = r
+                          }}
+                          style={{flex:1,justifyContent:'flex-end'}} type={type}>
+                           <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:10,paddingBottom:20}}>
+                              <Ionicons onPress={()=>setchooseCamer(false)} name="close-circle" size={70} color="white" style={{alignSelf:'flex-end'}} />
+                              <Ionicons onPress={()=>{
+                                if(type == 'front'){
+                                  setType(CameraType.back);
+                                }
+                                else{
+                                  setType(CameraType.front);
+                                }
+                              }} name="md-camera-reverse" size={60} color="white" style={{alignSelf:'flex-end'}} />
+                              <Ionicons onPress={onCaptureImage} name="checkmark-circle-sharp" size={70} color="white" style={{alignSelf:'flex-end'}} />
+                           </View>
+                        </Camera>
+                   </View>
+              </View>
+            </Modal>
+
+
             <Loading visible={loading} />
             <Text style={{fontFamily:'MON_BOLD',fontSize:23,marginVertical:8,alignSelf:'flex-start',paddingLeft:16}}>Membership Form</Text>
 
@@ -217,7 +315,7 @@ const Add_Member = (props) => {
             <Input_b  onChangeText={(val)=>{setHeight(val)}} value={height} placeholder="Height" styles={{marginTop:12,width:'94%'}} />
             <Input_b onChangeText={(val)=>{setBloodgroup(val)}} value={blood_group} placeholder="Blood group" styles={{marginTop:12,width:'94%'}} />
 
-            <Pressable onPress={chooseImageFunc} style={styles.imageContainer}>
+            <Pressable onPress={()=>setVisible(true)} style={styles.imageContainer}>
                <Image resizeMode="contain" style={styles.image}  source={image}  />
             </Pressable>
 

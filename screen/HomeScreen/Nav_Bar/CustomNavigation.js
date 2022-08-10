@@ -32,7 +32,7 @@ const CustomNavigation = (props) => {
         <View style={{flex:1}}>
 
             <View style={styles.header}>
-                 <View style={{zIndex:120,position:'absolute',marginLeft:16,marginTop:10,paddingTop:40,flexDirection:'row'}}>
+                 <View style={{zIndex:120,position:'absolute',marginLeft:16,marginTop:10,paddingTop:0,flexDirection:'row'}}>
                     <Circle_Image width={70} uri={(value.user.image == "null") ? require("../../../assets/images/no_image.jpg") : {uri:value.user.image}} />
                     <View style={{flex:2,paddingLeft:10,paddingTop:10}}> 
                         <Text style={{fontFamily:'MON_BOLD',fontSize:17,marginVertical:0,paddingVertical:0}}>{value.user.name}</Text>
@@ -72,7 +72,7 @@ const CustomNavigation = (props) => {
 const styles = StyleSheet.create({
   header:{
      height:300,
-     marginBottom:-180,
+     marginBottom:-210,
      zIndex:-1,
   },
   layer1:{

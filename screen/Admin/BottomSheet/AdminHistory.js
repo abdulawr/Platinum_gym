@@ -20,6 +20,7 @@ const AdminHistory = (props) => {
     const [pendingData,setPendingData] = useState([]);
     const [pendingDataLenght,setPendingDataLenght] = useState(20);
     const[loading,setLoading] = useState(false);
+    
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', async () => {

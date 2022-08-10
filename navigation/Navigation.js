@@ -6,7 +6,6 @@ import Landing from '../screen/Landing';
 import MemberProfile from '../screen/Members/MemberProfile';
 import Startup from "../screen/Startup";
 
-
 const Navigation = () => {
 
     const Stack = createNativeStackNavigator();

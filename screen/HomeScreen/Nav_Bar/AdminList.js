@@ -27,13 +27,14 @@ const AdminList = ({ navigation }) => {
         const unsubscribe = navigation.addListener('focus', () => {
             (
                 async () => {
-                    const q = query(collection(fireStore, "admins"),where('status','==','0'));
+                    const q = query(collection(fireStore, "admins"),where('status','==',0));
                     setLoading(true);
                     const querySnapshot = await getDocs(q);
                     let result = [];
                     querySnapshot.forEach((doc) => {
                       // doc.data() is never undefined for query doc snapshots
                       const item = doc.data();
+                      console.log(doc.id);
                       item.id = doc.id;
                       result.push(item);
                     //  console.log(doc.id, " => ", doc.data());

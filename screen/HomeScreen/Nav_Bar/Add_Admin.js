@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState,useLayoutEffect, useRef } from 'react';
 import {
     View,
     StyleSheet,
     Image,
     Pressable,
     ToastAndroid,
-    ScrollView
+    ScrollView,
+    Modal,
+    Dimensions
 } from 'react-native';
 import Button_c from '../../../component/Button/Button_c';
 import Input from '../../../component/Input/Input';
@@ -19,12 +21,16 @@ import { useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, FlipType, SaveFormat } from 'expo-image-manipulator';
 import { getStorage, ref,uploadBytes,getDownloadURL,uploadBytesResumable  } from "firebase/storage";
-
-
+import { Ionicons } from '@expo/vector-icons'; 
+import { Camera, CameraType } from 'expo-camera';
+import { async } from '@firebase/util';
 
 const Add_Admin = (props) => {
 
     const {navigation} = props;
+    
+    const [visible, setVisible] = useState(false);
+    let camera = useRef();
 
     const [name,setName] = useState();
     const [mobile,setMobile] = useState();
@@ -34,6 +40,10 @@ const Add_Admin = (props) => {
     const [loading,setLoading] = useState(false);
     const [chooseimage11,setChooseImage] = useState(null);
     const [image,setImage] = useState(require("../../../assets/images/choose_image.png"));
+
+    const [hasPermission, setHasPermission] = useState(null);
+    const [type, setType] = useState(CameraType.back);
+    const [chooseCamera, setchooseCamer] = useState(false);
 
     const submitForm = async (props) => {
       
@@ -138,50 +148,140 @@ const Add_Admin = (props) => {
         }
     }
 
+    useLayoutEffect(() => {
+      (async () => {
+        await askPer();
+      })();
+    }, [])
+
+    const askPer = async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === 'granted');
+    }
+
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
           setName('');
           setMobile('');
           setEmail('');
           setPassword('');
+          setImage(require("../../../assets/images/choose_image.png"));
         });
     
         return unsubscribe;
      }, [navigation]);
 
-    const chooseImage = async () => {
+    const chooseImage = async (type) => {
+
+      if(type == 1){
+        // chose from gallery
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1,1],
-            quality: 0.7,
-          });
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1,1],
+          quality: 0.7,
+        });
 
-        //  console.log('Orginal result => ',result);
+      //  console.log('Orginal result => ',result);
 
-          if (!result.cancelled) {
+        if (!result.cancelled) {
 
-            const manipResult = await manipulateAsync(result.uri,
-              [],
-              { compress: 0.8, format: SaveFormat.JPEG }
-            );
+          const manipResult = await manipulateAsync(result.uri,
+            [],
+            { compress: 0.8, format: SaveFormat.JPEG }
+          );
 
-         //   console.log('Resize IMage ===> ',manipResult);
-            setChooseImage(manipResult);
-            setImage({uri:result.uri});
+       //   console.log('Resize IMage ===> ',manipResult);
+          setChooseImage(manipResult);
+          setImage({uri:result.uri});
+          setchooseCamer(false);
+          setVisible(false);
+         }
+      }
+      else{
+        // choose from camera
+        console.log("choose from camera");
+      }
+        
+    }
+
+    const onCaptureImage = async () => {
+      if(camera){
+        camera.takePictureAsync().then(async(res)=>{
+        
+         const manipResult = await manipulateAsync(res.uri,
+            [],
+            { compress: 0.8, format: SaveFormat.JPEG }
+          );
+
+          setChooseImage(manipResult);
+          setImage({uri:res.uri});
+          setchooseCamer(false);
+          setVisible(false);
+
+        })
       }
     }
 
     return ( 
         <ScrollView style={{flex:1}} contentContainerStyle={{flexGrow:1}}>
         <View style={styles.container}>
+
+          
+            <Modal transparent visible={visible}>
+              <View style={{flex:1,backgroundColor:'#00000099',justifyContent:'center',alignItems:'center'}}>
+                   <View style={{width:250,height:180,backgroundColor:'white',borderRadius:10,elevation:7,justifyContent:'center'}}>
+                      <Ionicons onPress={()=>setVisible(false)} name="close-circle" size={35} color="red" style={{alignSelf:'flex-end'}} />
+                      <Button_c onClick={()=> chooseImage(1)} title="Gallery" type='y'  style={{marginTop:0}}/>
+                      <Button_c onClick={()=> {
+                        if(hasPermission === true ){
+                          setchooseCamer(true);
+                        }
+                        else{
+                          askPer(hasPermission);
+                        }
+                      }} title="Camera" style={{marginTop:15,marginBottom:25}} type='y' />
+                   </View>
+              </View>
+            </Modal>
+
+
+            <Modal transparent visible={chooseCamera}>
+              <View style={{flex:1,backgroundColor:'#00000099',justifyContent:'center',alignItems:'center'}}>
+                   <View style={{width:Dimensions.get('window').width-23,height:Dimensions.get('window').height*0.8,backgroundColor:'white',borderRadius:10,elevation:7}}>
+                      <Ionicons onPress={()=>setchooseCamer(false)} name="close-circle" size={35} color="red" style={{alignSelf:'flex-end'}} />
+                        <Camera
+                          autoFocus={true}
+                          ratio={[1,1]}
+                          ref={(r) => {
+                            camera = r
+                          }}
+                          style={{flex:1,justifyContent:'flex-end'}} type={type}>
+                           <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:10,paddingBottom:20}}>
+                              <Ionicons onPress={()=>setchooseCamer(false)} name="close-circle" size={70} color="white" style={{alignSelf:'flex-end'}} />
+                              <Ionicons onPress={()=>{
+                                if(type == 'front'){
+                                  setType(CameraType.back);
+                                }
+                                else{
+                                  setType(CameraType.front);
+                                }
+                              }} name="md-camera-reverse" size={60} color="white" style={{alignSelf:'flex-end'}} />
+                              <Ionicons onPress={onCaptureImage} name="checkmark-circle-sharp" size={70} color="white" style={{alignSelf:'flex-end'}} />
+                           </View>
+                        </Camera>
+                   </View>
+              </View>
+            </Modal>
+  
+
             <Loading visible={loading} />
              <Input value={name} onChangeText={(value) => {setName(value)}} placeholder="Name" />
              <Input value={mobile} onChangeText={(value) => {setMobile(value)}} placeholder="Mobile" />
              <Input value={email} onChangeText={(value) => {setEmail(value)}} placeholder="E-mail" />
              <Input value={password} secureTextEntry={true} onChangeText={(value) => {setPassword(value)}} placeholder="Password" />
 
-             <Pressable onPress={chooseImage} style={styles.imageContainer}>
+             <Pressable onPress={()=>setVisible(true)} style={styles.imageContainer}>
                <Image resizeMode="contain" style={styles.image}  source={image}  />
              </Pressable>
 

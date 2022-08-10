@@ -9,11 +9,13 @@ const TransactionRow = (props) => {
 
     const item = props.item;
     const date =  new Date(item.date.seconds * 1000).toDateString()
+    //const {navigation} = props;
 
     return (
         <View style={styles.container}>
              <View style={{flex:1,paddingLeft:12}}>
-                 <Text style={{fontFamily:'MON_BOLD'}}>{item.addedFor}</Text>
+                 <Text style={{fontFamily:'MON_BOLD'}}>{item.name}</Text>
+                 <Text style={{fontFamily:'MON_REG'}}>{item.addedFor}</Text>
                  <Text style={{color:"#008080",fontFamily:'MON_REG'}}>{item.amount} PKR</Text>
                  <Text style={{color:'#707070',fontSize:13}}>{date}</Text>
 
@@ -22,12 +24,14 @@ const TransactionRow = (props) => {
 
              </View>
 
-        {(props.check != false) &&
              <View style={{paddingRight:10}}>
+        {(props.check != false) &&
+           
                 <MaterialCommunityIcons onPress={() => props.completeTranscation(item)} name="check-all" size={35} color="#00A36C" />
-             </View>
+          
         }
 
+         </View>
         </View>
     );
 }

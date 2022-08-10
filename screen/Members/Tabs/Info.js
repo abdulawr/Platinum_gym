@@ -43,7 +43,7 @@ const Info = (props) => {
             date: new Date(),
             amount: amount,
             des: des || null,
-            addedBy:admin.userID
+            addedBy:admin.userID,
           }).then((resp) => {
 
             // update company account amount
@@ -65,7 +65,8 @@ const Info = (props) => {
                       amount:amount,
                       status:0,
                       des:des || null,
-                      addedFor:item.mobile || null
+                      addedFor:item.mobile || null,
+                      name:item.name || null,
                     }).then((res) => {
                         // for sub admin
                         setLoading(false);
